@@ -3,12 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#define OCTOWINELIB "/opt/octowineLIB/"
+#define OCTOWINELIB "/opt/octowineLIB/" // chemin pour la liste des prefix
 
 void octowine_help();
 
 int main(int argc, char *argv[])
 {
+	char winelink[] = "/usr/bin/wine";
 	char octolib[] = OCTOWINELIB;
 	int i;
 	if(argc == 1)
@@ -93,8 +94,15 @@ int main(int argc, char *argv[])
 						printf("tu compte executer aucun executable ? comme tu veux !");
 						return (0);
 					}
-					printf("%s\n", argv[i]);
-
+					printf("%d=i  et %d=argc\n", i, argc);
+					if (argc > i +1)
+					{
+						//printf("yaura des argu\n", i, argc);
+						execl(winelink, "wine", argv[i] ,argv[i+1], NULL);
+						return (0);
+					}
+					execl(winelink, "wine", argv[i] ,argv[i+1], NULL);
+					return (0);
 				}
 
 
