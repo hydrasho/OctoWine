@@ -5,9 +5,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <dirent.h>
 
 #define OCTOWINELIB "/opt/octowineLIB/" // chemin pour la liste des prefix
 
+char **getPrefix(char *url_to_octolib, int *nbr);
 void octowine_help();
 
 int main(int argc, char *argv[])
@@ -15,7 +18,10 @@ int main(int argc, char *argv[])
 	char winelink[] = "/usr/bin/wine";
 	char octolib[] = OCTOWINELIB;
 	char *prefix;
-	int i;
+	int i = 0;
+	int nbr = 0;
+	char **listePrefix;
+
 	if(argc == 1)
 		octowine_help();
 	if(argc >= 2)
@@ -25,7 +31,17 @@ int main(int argc, char *argv[])
 		{
 			if(strcmp(argv[1], "--liste") == 0 || strcmp(argv[1], "-l") == 0)
 			{
-				printf("liste des prefix:");
+				listePrefix = getPrefix(OCTOWINELIB, &nbr);
+				printf("||| %d prefix: |||\n", nbr);
+				while(i < nbr){
+					printf("- %s\n", listePrefix[i]);
+					i++;
+				}
+			}
+			if(strcmp(argv[1], "--gui") == 0 || strcmp(argv[1], "-g") == 0)
+			{
+				printf("lancement de octowine-GUI");
+				execl("/usr/bin", "octowine-gui", argv[2], NULL);
 			}
 		}
 		//end of command with argument
@@ -47,17 +63,8 @@ int main(int argc, char *argv[])
 				{
 					i++;
 					printf("ouverture de %s", prefix);
-					//open();
-					//\\\\\
-					//
-					//
-					//
-					//
-					//
-					//
-					//
-					//
-					//
+
+					return (0);
 				}
 				if(strcmp(argv[i], "--winetricks") == 0 || strcmp(argv[i], "-w") == 0)
 				{
@@ -65,15 +72,18 @@ int main(int argc, char *argv[])
 					i++;
 					if(argc == 4)
 					{
+						printf("HERE i = %d\n\n\n", i);
 						execl("/usr/bin/winetricks", "winetricks", argv[i], NULL);
 					}
 					else
 						execl("/usr/bin/winetricks", "winetricks", NULL);
+					return (0);
 				}
 				if(strcmp(argv[i], "--winecfg") == 0 || strcmp(argv[i], "-W") == 0)
 				{
 					printf("lancement de winecfg");
 					execl("/usr/bin/winecfg", "winecfg", NULL);
+					return (0);
 				}
 				return (0);//au cas où
 			}
@@ -103,6 +113,15 @@ int main(int argc, char *argv[])
 					{
 						printf("Ajouts du Debug\n");
 						setenv("WINEDEBUG", "+all", 0);
+						i++;
+						if(argc == i)
+							break;
+						continue;
+					}
+					if(strcmp(argv[i], "+G") == 0 || strcmp(argv[i], "+g") == 0)
+					{
+						printf("Ajouts de gamemode\n");
+						setenv("LD_PRELOAD", "/usr/lib/libgamemodeauto.so", 0);
 						i++;
 						if(argc == i)
 							break;
@@ -143,4 +162,31 @@ void octowine_help()
 	printf(" octowine <nameprefix> -W | for execute wineCFG     \n");
 	printf(" ==================================================== \n");
 }
-/*execl("/usr/bin/wine", "wine", "/opt/digordie/DigOrDie.exe", "NULL");*/
+
+char **getPrefix(char *url_to_octolib, int *nbr){
+	char **liste = malloc(sizeof(char) * 250);
+	int i = 0;
+	char *str;
+	struct dirent* file = NULL;
+	DIR *directory = NULL;
+	directory = opendir(url_to_octolib);
+	if (directory == NULL)
+	{
+		perror("");
+		return NULL;
+	}
+	while((file = readdir(directory)) != NULL)
+	{
+		
+		if(strcmp(file->d_name, "..") == 0 || strcmp(file->d_name, ".") == 0)
+			continue;
+		str = file->d_name;
+		liste[i] = str;
+		i++;
+	}
+	liste[i] = NULL;
+	
+	*nbr = i;
+	closedir(directory);
+	return liste;
+}
